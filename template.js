@@ -11,9 +11,12 @@
     , doc = root.document
     , emptyString = ""
 
-    , escapeElement = doc.createElement("div")
-    , escapeNode = doc.createTextNode(emptyString)
-    , stripElement = doc.createElement("div")
+    , createElement = "createElement"
+    , createTextNode = "createTextNode"
+    
+    , escapeElement = doc[createElement]("div")
+    , escapeNode = doc[createTextNode](emptyString)
+    , stripElement = doc[createElement]("div")
 
 
     , parentNode = "parentNode"
@@ -37,7 +40,7 @@
     , customHelpers = {}
     , customHelpersNumber = 0
     
-    , hasDataset = typeof document.createElement("div").dataset == OBJECT_TYPE
+    , hasDataset = typeof doc[createElement]("div").dataset == OBJECT_TYPE
     , hasObjectKeys = typeof Object.keys == "function"
     
     , nil = null
@@ -144,7 +147,7 @@
       forceWalker = parse(item, object, global || object)
     }
     while(textNode = textNodes.pop()) {
-      textNode[parentNode].replaceChild(doc.createTextNode(textNode.innerHTML), textNode)
+      textNode[parentNode].replaceChild(doc[createTextNode](textNode.innerHTML), textNode)
     }
     return el
   }
