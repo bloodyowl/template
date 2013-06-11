@@ -8,6 +8,17 @@ name to come
 * tests
 * documentation
 
+## doc
+
+### attributes
+
+* `data-if` : interprets the element if the tested value isn't empty or falsy, otherwise removes it
+* `data-unless` : interprets the element if the tested value is empty or falsy, otherwise removes it
+* `data-each` : interprets and repeats the element for each item in an object
+* `data-value` : sets the `innerHTML` property of with the given value
+* `data-textnode` : converts the element into a _textNode_, escapes HTML tags by default. 
+* `data-strip` : Strips the value's HTML tags. 
+* `data-escape` : Escapes the value's HTML tags. 
 
 ## draft
 
@@ -26,7 +37,7 @@ name to come
     </li>
     <li data-unless="desc">No value</li>
     <li data-if="desc2">
-      <span data-content="Values :" data-textnode></span>
+      Values :
       <ul>
         <li data-each="desc2" data-value></li>
       </ul>

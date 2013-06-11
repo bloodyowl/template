@@ -29,13 +29,22 @@
     , dataWith = "data-with"
     , dataAttrs = "data-attrs"
     , dataTextNode = "data-textnode"
-
+    
+    , customHelpers = {}
+    , customHelpersNumber = 0
 
   escapeElement.appendChild(escapeNode)
 
 
-
-
+  function addCustomHelper(name, fn){
+    customHelpersNumber++
+    customHelpers[name] = fn
+  }
+  
+  function removeCustomHelper(name){
+    customHelpersNumber--
+    delete customHelpers[name] 
+  }
 
   function escapeHTML(str){
     escapeNode.nodeValue = str
@@ -116,7 +125,7 @@
 
 
 
-  function evaluate(element, object, isClone){
+  function evaluate(element, object, isClone, global){
     var el = isClone ? element : element.cloneNode(true)
       , walker = walk(el)
       , item
@@ -131,7 +140,7 @@
         continue // ignore all non-element nodes
       }
       if(item.hasAttribute(dataTextNode)) textNodes.push(item)
-      forceWalker = parse(item, object, object)
+      forceWalker = parse(item, object, global || object)
     }
     while(textNode = textNodes.pop()) {
       textNode[parentNode].replaceChild(doc.createTextNode(textNode.innerHTML), textNode)
@@ -163,8 +172,9 @@
 
   function getValue(value, scope, object){
     if(!value) return scope
-    var start = value.charAt(0) == "/" ? object : scope
-      , val = value.split("."), i = 0, l = val.length
+    var globalScope = value.charAt(0) == "/"
+      , start = globalScope ? object : scope
+      , val = globalScope ? value.slice(1).split(".") : value.split("."), i = 0, l = val.length
       , currentVal = start
       , item
     for(;i < l; i++) {
@@ -185,7 +195,7 @@
     attribute = element[getAttribute](dataIf)
     if(attribute !== null) {
       value = getValue(attribute, scope, object)
-      if(!value || isEmpty(value)) {
+      if(!value || isEmpty(value)) {
         element[parentNode].removeChild(element)
         return
       } else {
@@ -218,7 +228,7 @@
           for(;i < l; i++) {
             item = element.cloneNode(true)
             item[removeAttribute](dataEach)
-            fragment.appendChild(evaluate(item, value[i], true))
+            fragment.appendChild(evaluate(item, value[i], true, object))
           }
         } else {
           i = 0
@@ -226,7 +236,7 @@
             if(!_hasOwn.call(value, i)) continue
             item = element.cloneNode(true)
             item[removeAttribute](dataEach)
-            fragment.appendChild(evaluate(item, value[i], true))
+            fragment.appendChild(evaluate(item, value[i], true, object))
           }
         }
         forceWalker = element[nextSibling]
@@ -279,9 +289,23 @@
         if(cache) element.setAttribute(attribute[length], cache.replace(content, get))
       }
     }
+    
+    var k
+    if(customHelpersNumber) {
+      for(k in customHelpers){
+        if(!_hasOwn.call(customHelpers, k)) continue
+        attribute = element[getAttribute]("data-" + k)
+        if(attribute !== null) {
+          element[removeAttribute]("data-" + k)
+          customHelpers[k](element, attribute, scope, object)
+        }
+      }
+    }
 
   }
 
+  evaluate.addCustomHelper = addCustomHelper
+  evaluate.removeCustomHelper = removeCustomHelper
   root.evaluate = evaluate
 
 })(this.window)
