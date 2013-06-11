@@ -32,6 +32,9 @@
     
     , customHelpers = {}
     , customHelpersNumber = 0
+    
+    , hasDataset = typeof document.createElement("div").dataset == "object"
+    , hasObjectKeys = typeof Object.keys == "function"
 
   escapeElement.appendChild(escapeNode)
 
@@ -192,6 +195,9 @@
   function parse(element, scope, object){
     var attribute, value, forceWalker
 
+    if(!element.attributes.length) return
+    if(hasDataset && hasObjectKeys && !Object.keys(element.dataset).length) return
+    
     attribute = element[getAttribute](dataIf)
     if(attribute !== null) {
       value = getValue(attribute, scope, object)
