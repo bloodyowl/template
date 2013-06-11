@@ -53,11 +53,12 @@
 
 
   function addCustomHelper(name, fn){
-    customHelpersNumber++
+    if(!customHelpers[name]) customHelpersNumber++
     customHelpers[name] = fn
   }
   
   function removeCustomHelper(name){
+    if(!customHelpers[name]) return
     customHelpersNumber--
     customHelpers[name] = nil
   }
