@@ -35,6 +35,8 @@
     
     , hasDataset = typeof document.createElement("div").dataset == "object"
     , hasObjectKeys = typeof Object.keys == "function"
+    
+    , nil = null
 
   escapeElement.appendChild(escapeNode)
 
@@ -46,7 +48,7 @@
   
   function removeCustomHelper(name){
     customHelpersNumber--
-    delete customHelpers[name] 
+    customHelpers[name] = nil
   }
 
   function escapeHTML(str){
@@ -62,14 +64,6 @@
     stripElement.innerHTML = str
     return stripElement.innerText || stripElement.textContent || ""
   }
-
-
-
-
-
-  // txt is the element representing dynamic textNodes
-  doc.createElement("txt")
-
 
 
 
@@ -99,7 +93,7 @@
             return current = c
           }
         }
-        if(lastChild) return current = lastChild[nextSibling] || null
+        if(lastChild) return current = lastChild[nextSibling] || nil
       } else {
         if(c = current.firstChild) {
           if(current !== element) parent.push(current)
@@ -119,7 +113,7 @@
         }
       }
 
-      return null
+      return nil
     }
     return fn
   }
@@ -137,7 +131,7 @@
       , forceWalker
 
     while(item = walker(forceWalker)) {
-      forceWalker = null
+      forceWalker = nil
       if(item.nodeType != item.ELEMENT_NODE) {
         if(item.nodeType == item.COMMENT_NODE) item[parentNode].removeChild(item)
         continue // ignore all non-element nodes
@@ -157,7 +151,7 @@
 
   function isEmpty(obj){
     var i
-    if(obj == null) return true
+    if(obj == nil) return true
     if(typeof obj == "object") {
       if("length" in obj && obj.length === 0) return true
       for(i in obj) {
@@ -183,7 +177,7 @@
     for(;i < l; i++) {
       item = val[i]
       currentVal = currentVal[item]
-      if(currentVal == null) return null
+      if(currentVal == nil) return nil
     }
     return currentVal
   }
@@ -199,7 +193,7 @@
     if(hasDataset && hasObjectKeys && !Object.keys(element.dataset).length) return
     
     attribute = element[getAttribute](dataIf)
-    if(attribute !== null) {
+    if(attribute !== nil) {
       value = getValue(attribute, scope, object)
       if(!value || isEmpty(value)) {
         element[parentNode].removeChild(element)
@@ -211,7 +205,7 @@
 
 
     attribute = element[getAttribute](dataUnless)
-    if(attribute !== null){
+    if(attribute !== nil){
       value = getValue(attribute, scope, object)
       if(value && !isEmpty(value)) {
         element[parentNode].removeChild(element)
@@ -223,10 +217,10 @@
 
 
     attribute = element[getAttribute](dataEach)
-    if(attribute !== null){
+    if(attribute !== nil){
       var i, l, item
       value = getValue(attribute, scope, object)
-      if(value != null && typeof value == "object") {
+      if(value != nil && typeof value == "object") {
         var fragment = doc.createDocumentFragment()
         if(_toString.call(value) == ARRAY_CLASS) {
           i = 0
@@ -255,9 +249,9 @@
 
 
     attribute = element[getAttribute](dataValue)
-    if(attribute !== null){
+    if(attribute !== nil){
       value = getValue(attribute, scope, object)
-      if(value != null) {
+      if(value != nil) {
         if(element[hasAttribute]("data-escape")) {
           value = escapeHTML(value)
         }
@@ -272,7 +266,7 @@
 
 
     attribute = element[getAttribute](dataWith)
-    if(attribute !== null){
+    if(attribute !== nil){
       value = getValue(attribute, scope, object)
       forceWalker = element[nextSibling]
       element[removeAttribute](dataWith)
@@ -283,10 +277,10 @@
 
 
     attribute = element[getAttribute](dataAttrs)
-    if(attribute !== null){
+    if(attribute !== nil){
       attribute = attribute.split(".")
       var length = attribute.length
-        , get = function (a,b){return getValue(b, scope, object) || null}
+        , get = function (a,b){return getValue(b, scope, object) || nil}
         , cache
 
       element[removeAttribute](dataAttrs)
@@ -299,9 +293,9 @@
     var k
     if(customHelpersNumber) {
       for(k in customHelpers){
-        if(!_hasOwn.call(customHelpers, k)) continue
+        if(!_hasOwn.call(customHelpers, k) || customHelpers[k] == nil) continue
         attribute = element[getAttribute]("data-" + k)
-        if(attribute !== null) {
+        if(attribute !== nil) {
           element[removeAttribute]("data-" + k)
           customHelpers[k](element, attribute, scope, object)
         }
