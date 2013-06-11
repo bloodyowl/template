@@ -4,7 +4,6 @@
   var ARRAY_CLASS = "[object Array]"
     , _toString = {}.toString
     , _hasOwn = {}.hasOwnProperty
-    , TXT_NODENAME = /^txt$/i
     , content = /#{([^\}]+)\}/g
 
 
@@ -29,6 +28,7 @@
     , dataValue = "data-value"
     , dataWith = "data-with"
     , dataAttrs = "data-attrs"
+    , dataTextNode = "data-textnode"
 
 
   escapeElement.appendChild(escapeNode)
@@ -130,7 +130,7 @@
         if(item.nodeType == item.COMMENT_NODE) item[parentNode].removeChild(item)
         continue // ignore all non-element nodes
       }
-      if(TXT_NODENAME.test(item.nodeName)) textNodes.push(item)
+      if(item.hasAttribute(dataTextNode)) textNodes.push(item)
       forceWalker = parse(item, object, object)
     }
     while(textNode = textNodes.pop()) {

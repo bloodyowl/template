@@ -14,17 +14,19 @@ name to come
 ### template
 
 ```html
-<tmpl id="template">
+<!DOCTYPE html>
+<title></title>
+<section id="template" hidden>
   <ul>
-    <li data-each="values" class="element-#{id}">
-      <txt data-value="value"></txt>
+    <li data-each="values" data-attrs="class" class="element-#{id}">
+      <span data-value="value" data-textnode></span>
       <ul data-if="sub">
         <li data-each="sub" data-value></li>
       </ul>
     </li>
     <li data-unless="desc">No value</li>
     <li data-if="desc2">
-      <txt data-content="Values :"></txt>
+      <span data-content="Values :" data-textnode></span>
       <ul>
         <li data-each="desc2" data-value></li>
       </ul>
@@ -36,7 +38,7 @@ name to come
       <strong data-value="foo.bar" data-strip></strong>
     </li>
   </ul>
-</tmpl>
+</section>
 ```
 
 ### data
