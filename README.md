@@ -1,12 +1,15 @@
 template
 ========
 
-name to come
+**template** is a simple DOM based templating engine. 
+
+It's mostly based on `data` attributes and a block-level logic. For instance, if you apply a `data-each` on an element, this element with be reproduced for each item in the given object. 
+
+The advantages of that is that you already have nodes ready, and you can easily use a custom helper to bind events while you're parsing the data. Also, the fact that it uses `data` attributes makes it semantic, easy to read in any text editor, as it's basic HTML. It's valid HTML code, and has no impact on SEO, as no content is in the elements. 
 
 ## todo
 
 * tests
-* documentation
 
 ## doc
 
@@ -16,106 +19,134 @@ name to come
 * `data-unless` : interprets the element if the tested value is empty or falsy, otherwise removes it
 * `data-each` : interprets and repeats the element for each item in an object
 * `data-value` : sets the `innerHTML` property of with the given value
+* `data-content` : sets the `innerHTML` with the content, replacing `#{key.key}` with the given values property of with the given value
 * `data-textnode` : converts the element into a _textNode_, escapes HTML tags by default. 
 * `data-strip` : Strips the value's HTML tags. 
-* `data-escape` : Escapes the value's HTML tags. 
+* `data-escape` : Escapes the value's HTML tags.
+* `data-attrs` :  Comma separated list of attributes to parse like `data-content`
 
-## draft
+### comments
+
+Comments are HTML comments. 
+
+```html
+<!-- This is a comment that is ignored by the parser -->
+```
+
+### mixins 
+
+#### Custom helpers
+
+With : 
+
+```js
+evaluate.addCustomHelper("uppercase", function(element, attributeValue, scope, globalScope){
+  element.innerHTML = element.innerHTML.toUpperCase()
+  element.style.fontSize = ".8em"
+})
+```
+
+
+
+You can now use : 
+
+```html
+<span data-uppercase data-value="/i18n/SOME_KEY"></span>
+```
+You can remove helpers using 
+
+```js
+evaluate.removeCustomHelper("uppercase")
+```
+
+## usage
 
 ### template
 
 ```html
-<!DOCTYPE html>
-<title></title>
-<section id="template" hidden>
-  <ul>
-    <li data-each="values" data-attrs="class" class="element-#{id}">
-      <span data-value="value" data-textnode></span>
-      <ul data-if="sub">
-        <li data-each="sub" data-value></li>
-      </ul>
-    </li>
-    <li data-unless="desc">No value</li>
-    <li data-if="desc2">
-      Values :
-      <ul>
-        <li data-each="desc2" data-value></li>
-      </ul>
-    </li>
-    <li data-with="foo">
-      <strong data-value="bar" data-escape></strong>
-    </li>
-    <li>
-      <strong data-value="foo.bar" data-strip></strong>
-    </li>
-  </ul>
+<section id="templates" hidden>
+  <!-- Template international user-list -->
+  <div class="user-list">
+    <!-- titles -->
+    <h3 data-unless="users" data-value="/i18n.NO_USERS"></h3>
+    <h3 data-if="users" data-content="#{/i18n.HAVE} #{users.length} #{/i18n.USERS}"></h3>
+    <!-- list -->
+    <ul class="user-list-items" data-if="users">
+      <li data-each="users">
+        <p>
+          <strong data-value="/i18n.NAME" data-uppercase></strong>
+          <span data-textnode data-value="name" data-strip></span>
+        </p>
+        <p>
+          <strong data-value="/i18n.DESCRIPTION" data-uppercase></strong>
+          <span data-textnode data-value="description" data-strip></span>
+        </p>
+      </li>
+    </ul>
+  </div>
 </section>
 ```
 
 ### data
 
-```json
-{
-  "values": [
-    {
-      "id": 3,
-      "value": "foo"
-    },
-    {
-      "id": 6,
-      "value": "bar",
-      "sub": [
-        "sub 1",
-        "sub 2",
-        "sub 3"
-      ]
-    },
-    {
-      "id": 7,
-      "value": "baz"
-    }
-  ],
-  "desc": [],
-  "desc2": [
-    "hello"
-  ],
-  "foo": {
-    "bar": "<p>baz</p>"
-  }
-}
+```js
+var users =  [
+        {name:"John Smith", description:"<strong>teacher</strong>"}
+      , {name:"Jane Smith", description:"<strong>doctor</strong>"}
+      , {name:"Jim", description:"<strong>student</strong>"}
+    ]
+  , i18n = {
+          NO_USERS : "No user found"
+        , HAVE : "Have"
+        , USERS : "users"
+        , NAME : "Name :"
+        , DESCRIPTION : "Description :"
+      }
+  , data = {users:users, i18n:i18n}
 ```
 
 ### js
 
 ```js
-evaluate(doocument.getElementById("template").children[0], data)
+// custom helper
+evaluate(document.getElementById("templates").children[0], data)
 ```
 
 ### rendering
 
 ```html
-<ul>
-  <li class="element-3">foo</li>
-  <li class="element-6">bar
-    <ul>
-      <li>sub 1</li>
-      <li>sub 2</li>
-      <li>sub 3</li>
-    </ul>
-  </li>
-  <li class="element-7">baz</li>
-  <li>No value</li>
-  <li>Values :
-    <ul>
-      <li>hello</li>
-    </ul>
-  </li>
-  <li>
-    <p><strong>&lt;p&gt;baz&lt;/p&gt;</strong></p>
-  </li>
-  <li>
-    <p><strong>baz</strong></p>
-  </li>
-</ul>
+<div class="user-list">
+  <h3>Have 3 users</h3>
+  <ul class="user-list-items">
+    <li>
+      <p>
+        <strong>Name :</strong>
+        John Smith
+      </p>
+      <p>
+        <strong>Description :</strong>
+        teacher
+      </p>
+    </li><li>
+      <p>
+        <strong>Name :</strong>
+        Jane Smith
+      </p>
+      <p>
+        <strong>Description :</strong>
+        doctor
+      </p>
+    </li><li>
+      <p>
+        <strong>Name :</strong>
+        Jim
+      </p>
+      <p>
+        <strong>Description :</strong>
+        student
+      </p>
+    </li>
+  </ul>
+</div>
 ```
  

@@ -22,6 +22,8 @@
     , parentNode = "parentNode"
     , nextSibling = "nextSibling"
     , removeAttribute = "removeAttribute"
+    , removeChild = "removeChild"
+    , appendChild = "appendChild"
     , getAttribute = "getAttribute"
     , hasAttribute = "hasAttribute"
     , cloneNode = "cloneNode"
@@ -35,6 +37,8 @@
     , dataAttrs = data + "attrs"
     , dataTextNode = data + "textnode"
     , dataContent = data + "content"
+    , dataEscape = data + "escape"
+    , dataStrip = data + "strip"
     
     
     , customHelpers = {}
@@ -45,7 +49,7 @@
     
     , nil = null
 
-  escapeElement.appendChild(escapeNode)
+  escapeElement[appendChild](escapeNode)
 
 
   function addCustomHelper(name, fn){
@@ -135,19 +139,22 @@
       , item
       , textNodes = []
       , textNode
+      , textNodeReplacement
       , forceWalker
 
     while(item = walker(forceWalker)) {
       forceWalker = nil
       if(item.nodeType != item.ELEMENT_NODE) {
-        if(item.nodeType == item.COMMENT_NODE) item[parentNode].removeChild(item)
+        if(item.nodeType == item.COMMENT_NODE) item[parentNode][removeChild](item)
         continue // ignore all non-element nodes
       }
       if(item.hasAttribute(dataTextNode)) textNodes.push(item)
       forceWalker = parse(item, object, global || object)
     }
     while(textNode = textNodes.pop()) {
-      textNode[parentNode].replaceChild(doc[createTextNode](textNode.innerHTML), textNode)
+      textNodeReplacement = escapeNode[cloneNode]()
+      textNodeReplacement.nodeValue = textNode.innerHTML
+      textNode[parentNode].replaceChild(textNodeReplacement, textNode)
     }
     return el
   }
@@ -203,7 +210,7 @@
     if(attribute !== nil) {
       value = getValue(attribute, scope, object)
       if(!value || isEmpty(value)) {
-        element[parentNode].removeChild(element)
+        element[parentNode][removeChild](element)
         return
       } else {
         element[removeAttribute](dataIf)
@@ -215,7 +222,7 @@
     if(attribute !== nil){
       value = getValue(attribute, scope, object)
       if(value && !isEmpty(value)) {
-        element[parentNode].removeChild(element)
+        element[parentNode][removeChild](element)
         return
       } else {
         element[removeAttribute](dataUnless)
@@ -235,7 +242,7 @@
           for(;i < l; i++) {
             item = element[cloneNode](true)
             item[removeAttribute](dataEach)
-            fragment.appendChild(evaluate(item, value[i], true, object))
+            fragment[appendChild](evaluate(item, value[i], true, object))
           }
         } else {
           i = 0
@@ -243,12 +250,12 @@
             if(!_hasOwn.call(value, i)) continue
             item = element[cloneNode](true)
             item[removeAttribute](dataEach)
-            fragment.appendChild(evaluate(item, value[i], true, object))
+            fragment[appendChild](evaluate(item, value[i], true, object))
           }
         }
         forceWalker = element[nextSibling]
         element[parentNode].insertBefore(fragment, element)
-        element[parentNode].removeChild(element)
+        element[parentNode][removeChild](element)
         return forceWalker
       }
     }
@@ -259,10 +266,12 @@
     if(attribute !== nil){
       value = getValue(attribute, scope, object)
       if(value != nil) {
-        if(element[hasAttribute](data + "escape")) {
+        if(element[hasAttribute](dataEscape)) {
+          element[removeAttribute](dataEscape)
           value = escapeHTML(value)
         }
-        if(element[hasAttribute](data + "strip")) {
+        if(element[hasAttribute](dataStrip)) {
+          element[removeAttribute](dataStrip)
           value = stripHTML(value)
         }
         element[removeAttribute](dataValue)
@@ -272,6 +281,7 @@
     
     attribute = element[getAttribute](dataContent)
     if(attribute !== nil){
+      element[removeAttribute](dataContent)
       var replacer = function(a,b){return getValue(b, scope, object) || emptyString}
       element.innerHTML = attribute.replace(content, replacer) 
     }
