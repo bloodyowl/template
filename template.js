@@ -2,16 +2,17 @@
 ;(function(root){
 
   var ARRAY_CLASS = "[object Array]"
+    , OBJECT_TYPE = "object"
     , _toString = {}.toString
     , _hasOwn = {}.hasOwnProperty
     , content = /#{([^\}]+)\}/g
 
 
     , doc = root.document
-
+    , emptyString = ""
 
     , escapeElement = doc.createElement("div")
-    , escapeNode = doc.createTextNode("")
+    , escapeNode = doc.createTextNode(emptyString)
     , stripElement = doc.createElement("div")
 
 
@@ -20,20 +21,23 @@
     , removeAttribute = "removeAttribute"
     , getAttribute = "getAttribute"
     , hasAttribute = "hasAttribute"
+    , cloneNode = "cloneNode"
 
-
-    , dataIf = "data-if"
-    , dataUnless = "data-unless"
-    , dataEach = "data-each"
-    , dataValue = "data-value"
-    , dataWith = "data-with"
-    , dataAttrs = "data-attrs"
-    , dataTextNode = "data-textnode"
+    , data = "data-"
+    , dataIf = data + "if"
+    , dataUnless = data + "unless"
+    , dataEach = data + "each"
+    , dataValue = data + "value"
+    , dataWith = data + "with"
+    , dataAttrs = data + "attrs"
+    , dataTextNode = data + "textnode"
+    , dataContent = data + "content"
+    
     
     , customHelpers = {}
     , customHelpersNumber = 0
     
-    , hasDataset = typeof document.createElement("div").dataset == "object"
+    , hasDataset = typeof document.createElement("div").dataset == OBJECT_TYPE
     , hasObjectKeys = typeof Object.keys == "function"
     
     , nil = null
@@ -62,7 +66,7 @@
 
   function stripHTML(str){
     stripElement.innerHTML = str
-    return stripElement.innerText || stripElement.textContent || ""
+    return stripElement.innerText || stripElement.textContent || emptyString
   }
 
 
@@ -123,7 +127,7 @@
 
 
   function evaluate(element, object, isClone, global){
-    var el = isClone ? element : element.cloneNode(true)
+    var el = isClone ? element : element[cloneNode](true)
       , walker = walk(el)
       , item
       , textNodes = []
@@ -152,7 +156,7 @@
   function isEmpty(obj){
     var i
     if(obj == nil) return true
-    if(typeof obj == "object") {
+    if(typeof obj == OBJECT_TYPE) {
       if("length" in obj && obj.length === 0) return true
       for(i in obj) {
         if(!_hasOwn.call(obj, i)) continue
@@ -220,13 +224,13 @@
     if(attribute !== nil){
       var i, l, item
       value = getValue(attribute, scope, object)
-      if(value != nil && typeof value == "object") {
+      if(value != nil && typeof value == OBJECT_TYPE) {
         var fragment = doc.createDocumentFragment()
         if(_toString.call(value) == ARRAY_CLASS) {
           i = 0
           l = value.length
           for(;i < l; i++) {
-            item = element.cloneNode(true)
+            item = element[cloneNode](true)
             item[removeAttribute](dataEach)
             fragment.appendChild(evaluate(item, value[i], true, object))
           }
@@ -234,7 +238,7 @@
           i = 0
           for(i in value) {
             if(!_hasOwn.call(value, i)) continue
-            item = element.cloneNode(true)
+            item = element[cloneNode](true)
             item[removeAttribute](dataEach)
             fragment.appendChild(evaluate(item, value[i], true, object))
           }
@@ -252,15 +256,21 @@
     if(attribute !== nil){
       value = getValue(attribute, scope, object)
       if(value != nil) {
-        if(element[hasAttribute]("data-escape")) {
+        if(element[hasAttribute](data + "escape")) {
           value = escapeHTML(value)
         }
-        if(element[hasAttribute]("data-strip")) {
+        if(element[hasAttribute](data + "strip")) {
           value = stripHTML(value)
         }
         element[removeAttribute](dataValue)
-        element.innerHTML = value || ""
+        element.innerHTML = value || emptyString
       } 
+    }
+    
+    attribute = element[getAttribute](dataContent)
+    if(attribute !== nil){
+      var replacer = function(a,b){return getValue(b, scope, object) || emptyString}
+      element.innerHTML = attribute.replace(content, replacer) 
     }
 
 
@@ -280,7 +290,7 @@
     if(attribute !== nil){
       attribute = attribute.split(".")
       var length = attribute.length
-        , get = function (a,b){return getValue(b, scope, object) || nil}
+        , get = function (a,b){return getValue(b, scope, object) || emptyString}
         , cache
 
       element[removeAttribute](dataAttrs)
@@ -294,16 +304,15 @@
     if(customHelpersNumber) {
       for(k in customHelpers){
         if(!_hasOwn.call(customHelpers, k) || customHelpers[k] == nil) continue
-        attribute = element[getAttribute]("data-" + k)
+        attribute = element[getAttribute](data + k)
         if(attribute !== nil) {
-          element[removeAttribute]("data-" + k)
+          element[removeAttribute](data + k)
           customHelpers[k](element, attribute, scope, object)
         }
       }
     }
 
   }
-
   evaluate.addCustomHelper = addCustomHelper
   evaluate.removeCustomHelper = removeCustomHelper
   root.evaluate = evaluate
